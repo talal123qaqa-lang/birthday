@@ -1,112 +1,354 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>عيد ميلاد لورين</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
-<style>
-body {
-  margin: 0;
-  background: #ffe6eb;
-  text-align: center;
-  font-family: Arial;
-}
-canvas {
-  display: block;
-  margin: auto;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>عيد ميلاد لورين</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top, #f8e7ec 0%, #f3dce3 45%, #ecd2da 100%);
+      font-family: "Tahoma", "Arial", sans-serif;
+      color: #7a2d48;
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .title-box {
+      position: absolute;
+      left: 50%;
+      bottom: 9vh;
+      transform: translateX(-50%);
+      text-align: center;
+      color: #7a2d48;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .title {
+      font-size: clamp(28px, 3.2vw, 46px);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .date {
+      font-size: clamp(16px, 1.3vw, 22px);
+      margin-bottom: 6px;
+      opacity: 0.88;
+    }
+
+    .countdown {
+      font-size: clamp(18px, 1.5vw, 26px);
+      font-weight: 700;
+    }
+  </style>
 </head>
-
 <body>
+  <canvas id="scene"></canvas>
 
-<script>
-let chocoY = -200;
-let vanillaY = -200;
+  <div class="overlay">
+    <div class="title-box">
+      <div class="title">عيد ميلاد لورين 🎉</div>
+      <div class="date">31 / 12 / 2026</div>
+      <div class="countdown" id="countdown">جاري الحساب...</div>
+    </div>
+  </div>
 
-let step = 0;
-let creamWidth = 0;
-let candleHeight = 0;
+  <script>
+    const canvas = document.getElementById("scene");
+    const ctx = canvas.getContext("2d");
 
-function setup() {
-  createCanvas(800, 600);
-}
+    let w = 0;
+    let h = 0;
+    let cx = 0;
+    let cakeBaseY = 0;
 
-function draw() {
-  background(255,230,235);
+    function resize() {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = Math.floor(w * ratio);
+      canvas.height = Math.floor(h * ratio);
+      canvas.style.width = w + "px";
+      canvas.style.height = h + "px";
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-  let cx = width/2;
+      cx = w / 2;
+      cakeBaseY = h * 0.56;
+    }
+    window.addEventListener("resize", resize);
+    resize();
 
-  // شوكولاتة
-  if(step >= 0){
-    fill(92,51,23);
-    ellipse(cx, chocoY, 250, 90);
+    const state = {
+      stage: 0,
+      time: 0,
 
-    if(chocoY < 350) chocoY += 6;
-    else step = 1;
-  }
+      bottomY: -260,
+      middleY: -260,
+      creamProgress: 0,
+      candleProgress: 0,
+      messageAlpha: 0,
 
-  // فانيلا
-  if(step >= 1){
-    fill(255,240,190);
-    ellipse(cx, vanillaY, 200, 80);
+      bottomTarget: () => cakeBaseY,
+      middleTarget: () => cakeBaseY - 92
+    };
 
-    if(vanillaY < 280) vanillaY += 6;
-    else step = 2;
-  }
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
 
-  // كريمة
-  if(step >= 2){
-    fill(255);
-    rect(cx - creamWidth/2, 250, creamWidth, 20, 10);
-    if(creamWidth < 200) creamWidth += 4;
-    else step = 3;
-  }
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
 
-  // شمعة
-  if(step >= 3){
-    fill(255,100,180);
-    rect(cx-5, 250-candleHeight, 10, candleHeight);
+    function update(dt) {
+      state.time += dt;
 
-    if(candleHeight < 60) candleHeight += 2;
-    else step = 4;
-  }
+      if (state.stage === 0) {
+        state.bottomY += 420 * dt;
+        if (state.bottomY >= state.bottomTarget()) {
+          state.bottomY = state.bottomTarget();
+          state.stage = 1;
+        }
+      } else if (state.stage === 1) {
+        state.middleY += 420 * dt;
+        if (state.middleY >= state.middleTarget()) {
+          state.middleY = state.middleTarget();
+          state.stage = 2;
+        }
+      } else if (state.stage === 2) {
+        state.creamProgress += dt * 0.9;
+        if (state.creamProgress >= 1) {
+          state.creamProgress = 1;
+          state.stage = 3;
+        }
+      } else if (state.stage === 3) {
+        state.candleProgress += dt * 1.3;
+        if (state.candleProgress >= 1) {
+          state.candleProgress = 1;
+          state.stage = 4;
+        }
+      } else if (state.stage === 4) {
+        state.messageAlpha = Math.min(1, state.messageAlpha + dt * 1.4);
+      }
+    }
 
-  // لهب
-  if(step >= 4){
-    fill(255,180,0);
-    ellipse(cx, 180, 15, 20);
-  }
+    function drawBackground() {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, "#f8e7ec");
+      g.addColorStop(1, "#ecd2da");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
 
-  // النص
-  if(step >= 4){
-    fill(120,40,70);
-    textSize(28);
-    textAlign(CENTER);
-    text("عيد ميلاد لورين 🎉", cx, 520);
+      ctx.fillStyle = "rgba(255,255,255,0.16)";
+      for (let i = 0; i < 7; i++) {
+        ctx.beginPath();
+        ctx.arc(
+          (i + 1) * (w / 8),
+          h * 0.18 + Math.sin(state.time + i) * 10,
+          24 + (i % 3) * 7,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill();
+      }
 
-    textSize(18);
-    text(getCountdown(), cx, 550);
-  }
-}
+      const tableY = cakeBaseY + 140;
+      const tg = ctx.createLinearGradient(0, tableY - 20, 0, h);
+      tg.addColorStop(0, "#d7b39e");
+      tg.addColorStop(1, "#bb917b");
+      ctx.fillStyle = tg;
+      ctx.fillRect(0, tableY, w, h - tableY);
+    }
 
-// العد التنازلي
-function getCountdown(){
-  let target = new Date("2026-12-31T00:00:00");
-  let now = new Date();
+    function oval(x, y, rw, rh, fill, stroke) {
+      ctx.beginPath();
+      ctx.ellipse(x, y, rw, rh, 0, 0, Math.PI * 2);
+      if (fill) {
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+      if (stroke) {
+        ctx.strokeStyle = stroke;
+        ctx.stroke();
+      }
+    }
 
-  let diff = target - now;
+    function drawCakeShadow() {
+      oval(cx, cakeBaseY + 130, 165, 26, "rgba(0,0,0,0.18)");
+    }
 
-  if(diff <= 0) return "اليوم هو عيد ميلادها 🎉";
+    function drawBottomLayer(y) {
+      const x = cx;
+      const width = 290;
+      const height = 110;
 
-  let days = Math.floor(diff / (1000*60*60*24));
-  let hours = Math.floor((diff / (1000*60*60)) % 24);
-  let minutes = Math.floor((diff / (1000*60)) % 60);
-  let seconds = Math.floor((diff / 1000) % 60);
+      const sideG = ctx.createLinearGradient(x, y - height / 2, x, y + height / 2);
+      sideG.addColorStop(0, "#8b4b1e");
+      sideG.addColorStop(1, "#6f3914");
 
-  return "باقي: " + days + " يوم " + hours + " ساعة " + minutes + " دقيقة " + seconds + " ثانية";
-}
-</script>
+      ctx.fillStyle = sideG;
+      ctx.fillRect(x - width / 2, y - height / 2, width, height);
 
+      oval(x, y - height / 2, width / 2, 30, "#a85a24", "#61300e");
+      oval(x, y + height / 2, width / 2, 30, "#6c3713");
+
+      // لمعان
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.fillRect(x - width / 2 + 20, y - height / 2 + 12, 18, height - 24);
+    }
+
+    function drawMiddleLayer(y) {
+      const x = cx;
+      const width = 230;
+      const height = 92;
+
+      const sideG = ctx.createLinearGradient(x, y - height / 2, x, y + height / 2);
+      sideG.addColorStop(0, "#f7e4a8");
+      sideG.addColorStop(1, "#e8cf88");
+
+      ctx.fillStyle = sideG;
+      ctx.fillRect(x - width / 2, y - height / 2, width, height);
+
+      oval(x, y - height / 2, width / 2, 24, "#fff0b8", "#9d8a4c");
+      oval(x, y + height / 2, width / 2, 24, "#d8bf77");
+
+      ctx.fillStyle = "rgba(255,255,255,0.16)";
+      ctx.fillRect(x - width / 2 + 15, y - height / 2 + 10, 14, height - 20);
+    }
+
+    function drawCream() {
+      const t = easeOutCubic(Math.min(state.creamProgress, 1));
+      const topY = state.middleTarget() - 46;
+      const width = lerp(0, 248, t);
+
+      const creamG = ctx.createLinearGradient(0, topY - 16, 0, topY + 24);
+      creamG.addColorStop(0, "#fffdfd");
+      creamG.addColorStop(1, "#ececec");
+
+      ctx.fillStyle = creamG;
+      ctx.beginPath();
+      ctx.roundRect(cx - width / 2, topY - 12, width, 24, 12);
+      ctx.fill();
+
+      if (width > 80) {
+        const drips = [
+          { x: -88, h: 24 },
+          { x: -45, h: 18 },
+          { x: 0, h: 28 },
+          { x: 48, h: 20 },
+          { x: 92, h: 26 }
+        ];
+
+        drips.forEach(d => {
+          const dh = d.h * t;
+          oval(cx + d.x, topY + dh / 2, 10, dh / 2 + 4, "#f5f5f5");
+        });
+      }
+
+      if (t > 0.4) {
+        oval(cx, topY + 2, 116, 22, "rgba(255,255,255,0.65)");
+      }
+    }
+
+    function drawCandle() {
+      const t = easeOutCubic(Math.min(state.candleProgress, 1));
+      const candleH = lerp(0, 78, t);
+      const candleY = state.middleTarget() - 68 - candleH;
+
+      ctx.fillStyle = "#ff6fb3";
+      ctx.fillRect(cx - 6, candleY, 12, candleH);
+
+      ctx.strokeStyle = "rgba(255,255,255,0.65)";
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(cx - 6, candleY + 10 + i * 16);
+        ctx.lineTo(cx + 6, candleY + 4 + i * 16);
+        ctx.stroke();
+      }
+
+      if (t > 0.85) {
+        const flameY = candleY - 14 + Math.sin(state.time * 8) * 1.5;
+        oval(cx, flameY, 8, 14, "#ffb300");
+        oval(cx, flameY + 1, 4, 7, "#ffe69a");
+      }
+    }
+
+    function drawPlate() {
+      oval(cx, cakeBaseY + 118, 195, 22, "#f6f6f6", "#b9b9b9");
+      oval(cx, cakeBaseY + 113, 150, 12, "#ffffff");
+    }
+
+    function drawParticles() {
+      if (state.stage < 4) return;
+
+      for (let i = 0; i < 10; i++) {
+        const px = cx - 120 + i * 26 + Math.sin(state.time * 1.5 + i) * 8;
+        const py = cakeBaseY - 175 + Math.sin(state.time * 2.4 + i * 1.3) * 18;
+        const r = 2 + (i % 2);
+        ctx.fillStyle = i % 2 === 0 ? "rgba(255,255,255,0.75)" : "rgba(255,210,120,0.6)";
+        ctx.beginPath();
+        ctx.arc(px, py, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function draw() {
+      drawBackground();
+      drawCakeShadow();
+      drawPlate();
+      drawBottomLayer(state.bottomY);
+      drawMiddleLayer(state.middleY);
+      if (state.stage >= 2) drawCream();
+      if (state.stage >= 3) drawCandle();
+      drawParticles();
+    }
+
+    function updateCountdown() {
+      const el = document.getElementById("countdown");
+      const target = new Date("2026-12-31T00:00:00");
+      const now = new Date();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        el.textContent = "اليوم هو عيد ميلادها 🎉";
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      el.textContent = `باقي: ${days} يوم ${hours} ساعة ${minutes} دقيقة ${seconds} ثانية`;
+    }
+
+    let last = performance.now();
+    function loop(now) {
+      const dt = Math.min((now - last) / 1000, 0.033);
+      last = now;
+      update(dt);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+    requestAnimationFrame(loop);
+  </script>
 </body>
 </html>
