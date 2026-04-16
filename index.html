@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>عيد ميلاد لورين</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<style>
+body {
+  margin: 0;
+  background: #ffe6eb;
+  text-align: center;
+  font-family: Arial;
+}
+canvas {
+  display: block;
+  margin: auto;
+}
+</style>
+</head>
+
+<body>
+
+<script>
+let chocoY = -200;
+let vanillaY = -200;
+
+let step = 0;
+let creamWidth = 0;
+let candleHeight = 0;
+
+function setup() {
+  createCanvas(800, 600);
+}
+
+function draw() {
+  background(255,230,235);
+
+  let cx = width/2;
+
+  // شوكولاتة
+  if(step >= 0){
+    fill(92,51,23);
+    ellipse(cx, chocoY, 250, 90);
+
+    if(chocoY < 350) chocoY += 6;
+    else step = 1;
+  }
+
+  // فانيلا
+  if(step >= 1){
+    fill(255,240,190);
+    ellipse(cx, vanillaY, 200, 80);
+
+    if(vanillaY < 280) vanillaY += 6;
+    else step = 2;
+  }
+
+  // كريمة
+  if(step >= 2){
+    fill(255);
+    rect(cx - creamWidth/2, 250, creamWidth, 20, 10);
+    if(creamWidth < 200) creamWidth += 4;
+    else step = 3;
+  }
+
+  // شمعة
+  if(step >= 3){
+    fill(255,100,180);
+    rect(cx-5, 250-candleHeight, 10, candleHeight);
+
+    if(candleHeight < 60) candleHeight += 2;
+    else step = 4;
+  }
+
+  // لهب
+  if(step >= 4){
+    fill(255,180,0);
+    ellipse(cx, 180, 15, 20);
+  }
+
+  // النص
+  if(step >= 4){
+    fill(120,40,70);
+    textSize(28);
+    textAlign(CENTER);
+    text("عيد ميلاد لورين 🎉", cx, 520);
+
+    textSize(18);
+    text(getCountdown(), cx, 550);
+  }
+}
+
+// العد التنازلي
+function getCountdown(){
+  let target = new Date("2026-12-31T00:00:00");
+  let now = new Date();
+
+  let diff = target - now;
+
+  if(diff <= 0) return "اليوم هو عيد ميلادها 🎉";
+
+  let days = Math.floor(diff / (1000*60*60*24));
+  let hours = Math.floor((diff / (1000*60*60)) % 24);
+  let minutes = Math.floor((diff / (1000*60)) % 60);
+  let seconds = Math.floor((diff / 1000) % 60);
+
+  return "باقي: " + days + " يوم " + hours + " ساعة " + minutes + " دقيقة " + seconds + " ثانية";
+}
+</script>
+
+</body>
+</html>
